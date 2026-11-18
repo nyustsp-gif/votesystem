@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#13294B">
+<title>議會表決系統｜國立雲林科技大學學生議會</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700;900&display=swap">
+<style>
+:root{
+  --navy:#13294B; --navy-line:#7487A8; --navy-sub:#C9D3E3;
+  --ink:#111827; --muted:#4B5563; --line:#CBD2DC; --hair:#E5E7EB; --bg:#F3F4F6; --field:#9CA3AF;
+  /* 表決顏色：文字用深色以確保可讀，色塊用飽和色 */
+  --yes:#15803D; --no:#B91C1C; --abs:#B38600; --abs-fill:#EAB308; --none:#111827; --away:#B8BEC8;
+  --tie:#13294B;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:'Noto Sans TC',system-ui,-apple-system,sans-serif;-webkit-text-size-adjust:100%}
+.num{font-family:Inter,'Noto Sans TC',sans-serif;font-variant-numeric:tabular-nums}
+.serif{font-family:'Noto Serif TC','Songti TC',serif}
+h1,h2,h3,p{margin:0}
+a{color:var(--navy)}
+button{font:inherit;cursor:pointer}
+input,select{font:inherit}
+button:disabled{opacity:.45;cursor:not-allowed}
+.hidden{display:none!important}
+.muted{color:var(--muted)}
+.small{font-size:13px;line-height:1.7}
+.label{font-size:13px;color:var(--muted);letter-spacing:.12em}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.between{justify-content:space-between}
+.wrap{max-width:1360px;margin:0 auto;padding:0 24px}
+.clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 20px;border-radius:3px;border:1px solid var(--field);background:#fff;color:var(--ink);font-size:15px;text-decoration:none}
+.btn.sm{min-height:36px;padding:0 12px;font-size:13px}
+.btn.primary{background:var(--navy);border-color:var(--navy);color:#fff;font-weight:700;letter-spacing:.08em}
+.btn.danger{background:var(--no);border-color:var(--no);color:#fff;font-weight:700}
+.btn.big{min-height:52px;font-size:17px;padding:0 32px}
+.field{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:700}
+.field input,.field select{min-height:46px;padding:0 12px;border-radius:3px;border:1px solid var(--field);font-size:16px;font-weight:400;background:#fff;color:var(--ink);width:100%}
+.field .hint{font-size:13px;font-weight:400;color:var(--muted)}
+.card{background:#fff;border:1px solid var(--line);border-top:3px solid var(--navy);padding:20px 24px}
+.card-title{font-family:'Noto Serif TC',serif;font-size:19px;font-weight:700;letter-spacing:.08em}
+.card-title.ruled{padding-bottom:12px;border-bottom:1px solid var(--line)}
+.err{color:var(--no);font-size:14px;min-height:1.4em}
+.stamp{font-size:14px;color:var(--yes);border:1px solid var(--yes);padding:5px 12px;white-space:nowrap}
+.integ{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;font-size:14px;line-height:1.7;padding:10px 14px;border:1px solid var(--line);background:#F6F7F9}
+.integ.ok{color:var(--yes)}
+.integ.bad{color:#7F1D1D;background:#FEF2F2;border-color:var(--no)}
+.integ ul{margin:4px 0 0;padding-left:20px}
+.topbar{background:var(--navy);color:#fff}
+.topbar .btn{background:transparent;color:#fff;border-color:var(--navy-line);min-height:44px}
+.topbar .btn.light{background:#fff;color:var(--navy);border-color:#fff;font-weight:700}
+.org{font-family:'Noto Serif TC',serif;font-weight:700;letter-spacing:.08em}
+.seg{display:flex;flex-wrap:wrap}
+.seg button{min-height:44px;padding:0 14px;margin-right:-1px;border-radius:0;border:1px solid var(--field);background:#fff;color:var(--ink);font-size:15px}
+.seg button[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff;position:relative}
+.notice{max-width:560px;margin:15vh auto;line-height:1.7}
+/* 資料列：上粗線、下細線、欄間細線 */
+.strip{display:flex;border-top:2px solid var(--navy);border-bottom:1px solid var(--line)}
+.strip > *{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;padding:9px 14px;border-right:1px solid var(--line)}
+.strip > *:first-child{padding-left:0}
+.strip > *:last-child{border-right:none;padding-right:0}
+.strip .k{font-size:12px;color:var(--muted)}
+.strip .v{font-size:15px;font-weight:700}
+.sw{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:baseline}
+
+.credit{font-size:12px;color:var(--muted);text-align:right;letter-spacing:.02em}
+.s-credit{position:absolute;right:calc(var(--u)*3);bottom:calc(var(--u)*.45);font-size:calc(var(--u)*.75);color:var(--muted)}
+/* ── 議員手機 ── */
+.v-wrap{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:#fff}
+.v-bar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;gap:12px}
+.v-bar .sub{font-size:12px;color:var(--navy-sub);letter-spacing:.04em}
+.v-bar .ttl{font-size:18px}
+.v-id{padding:10px 20px;font-size:14px;display:flex;justify-content:space-between;gap:12px;background:var(--bg);border-bottom:1px solid var(--line)}
+.v-id .st{font-weight:700;color:var(--yes)}
+.v-id .st.wait{color:#B45309}
+.v-main{flex:1;display:flex;flex-direction:column;padding:18px 20px 20px;gap:16px}
+.v-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:24px}
+.v-q{font-size:21px;font-weight:700;line-height:1.45;word-break:break-word}
+.v-opts{display:flex;flex-direction:column;gap:10px}
+.v-opt{min-height:64px;border-radius:3px;font-size:22px;font-weight:700;letter-spacing:.3em;display:flex;align-items:center;justify-content:center;gap:8px;background:#fff;color:var(--c);border:2px solid var(--f)}
+.v-opt svg{display:none}
+.v-opt[aria-pressed="true"]{background:var(--f);color:var(--on)}
+.v-opt[aria-pressed="true"] svg{display:block}
+.v-opt:disabled{opacity:1}
+.v-opt:disabled:not([aria-pressed="true"]){opacity:.35}
+.v-confirm{min-height:56px;font-size:18px}
+.v-hint{font-size:14px;line-height:1.7;text-align:center;color:#374151}
+.v-foot{margin-top:auto;padding-top:10px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--muted)}
+.v-login{max-width:440px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:#fff}
+.v-login .hero{background:var(--navy);color:#fff;padding:40px 24px 28px;display:flex;flex-direction:column;gap:6px}
+.v-login .hero span{font-size:14px;color:var(--navy-sub);letter-spacing:.06em}
+.v-login h1{font-size:30px}
+.v-login form{display:flex;flex-direction:column;gap:18px;padding:32px 24px 12px}
+.v-login .note{padding:0 24px 32px}
+
+/* ── 秘書處 ── */
+.a-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding-top:12px;padding-bottom:12px}
+.a-grid{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;padding-top:24px;padding-bottom:48px}
+.a-side{flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:12px}
+.a-main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.m-row{display:flex;align-items:center;gap:12px;min-height:48px;padding:4px 0;border-top:1px solid var(--hair);cursor:pointer}
+.m-chk{width:22px;height:22px;flex:none;margin:0;accent-color:var(--navy);cursor:pointer}
+.m-tag{flex:none;font-size:13px;font-weight:700;color:var(--muted);min-width:42px;text-align:right}
+.m-tag.on{color:var(--yes)}
+
+.m-name{font-size:14px;flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.m-st{font-size:12px;color:var(--muted)}
+.m-st b{color:var(--muted)}
+.m-st b.on{color:var(--ink)}
+.m-st b.wait{color:#B45309}
+.m-row .btn{flex:none}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:640px){.form-grid{grid-template-columns:minmax(0,1fr)}}
+.tallies .v{font-size:30px;font-family:Inter,'Noto Sans TC',sans-serif;font-variant-numeric:tabular-nums}
+.tallies .k{font-size:14px}
+.table-box{overflow-x:auto}
+table{width:100%;min-width:680px;border-collapse:collapse;font-size:14px}
+thead tr{border-top:2px solid var(--navy);border-bottom:1px solid var(--line)}
+th{text-align:left;color:var(--muted);font-weight:500;font-size:13px;padding:8px 10px;white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--hair);vertical-align:top;white-space:nowrap}
+td.wide{white-space:normal;min-width:280px}
+
+/* ── 投影大螢幕（以 --u 為單位隨螢幕縮放；1600×900 時 1u = 16px） ── */
+.s-wrap{--u:min(1vw,1.778vh);position:relative;height:100vh;overflow:hidden;background:#fff;display:flex;flex-direction:column}
+.s-band{flex:none;height:calc(var(--u)*4.5);background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 calc(var(--u)*3)}
+.s-band .org{font-size:calc(var(--u)*1.5)}
+.s-band .mt{font-size:calc(var(--u)*1.05);color:var(--navy-sub);margin-left:calc(var(--u)*1.5)}
+.s-band .st{font-size:calc(var(--u)*1.05);letter-spacing:.24em;padding:calc(var(--u)*.35) calc(var(--u)*1);border:1px solid var(--navy-line)}
+.s-main{flex:1;min-height:0;display:flex;flex-direction:column;gap:calc(var(--u)*1.35);padding:calc(var(--u)*1.6) calc(var(--u)*3) calc(var(--u)*1.9)}
+.s-subj{display:flex;flex-direction:column;gap:calc(var(--u)*.35)}
+.s-subj .label{font-size:calc(var(--u)*.95)}
+.s-title{font-family:'Noto Serif TC',serif;font-size:calc(var(--u)*2.1);font-weight:700;line-height:1.4;word-break:break-word}
+.s-info{display:flex;border-top:2px solid var(--navy);border-bottom:1px solid var(--line)}
+.s-info > div{flex:1;min-width:0;display:flex;flex-direction:column;gap:calc(var(--u)*.2);padding:calc(var(--u)*.6) calc(var(--u)*1.1) calc(var(--u)*.75);border-right:1px solid var(--line)}
+.s-info > div:first-child{padding-left:0}
+.s-info > div.end{flex:none;width:calc(var(--u)*17.5);border-right:none;padding-right:0;align-items:flex-end}
+.s-info .k{font-size:calc(var(--u)*.88);color:var(--muted)}
+.s-info .v{font-size:calc(var(--u)*1.3);font-weight:700}
+.s-info .x{font-size:calc(var(--u)*.88);color:var(--muted)}
+.s-info .time{font-size:calc(var(--u)*3);font-weight:700;line-height:1.1}
+.s-info .res{font-family:'Noto Serif TC',serif;font-size:calc(var(--u)*2.4);font-weight:900;line-height:1.15}
+.s-body{flex:1;min-height:0;display:flex;flex-direction:column}
+.s-grid{flex:1;min-height:0;display:grid;grid-auto-rows:minmax(0,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.s-tile{background:#fff;min-height:0;min-width:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(var(--dfp,14px)*.3);text-align:center;padding:4px}
+.s-tile .d{font-size:var(--dfp,14px);color:var(--muted);line-height:1.2;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.s-tile .n{font-family:'Noto Serif TC',serif;font-size:var(--nfp,40px);font-weight:700;letter-spacing:.06em;line-height:1.2;white-space:nowrap}
+.s-anon{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(var(--u)*.8);border:1px solid var(--line);background:#F6F7F9}
+.s-anon b{font-family:'Noto Serif TC',serif;font-size:calc(var(--u)*2.6);font-weight:700;letter-spacing:.2em}
+.s-anon span{font-size:calc(var(--u)*1.25);color:var(--muted)}
+.s-foot{display:flex;border-top:2px solid var(--navy);border-bottom:1px solid var(--line)}
+.s-t{flex:1;display:flex;align-items:center;justify-content:space-between;gap:calc(var(--u)*.75);padding:calc(var(--u)*.75) calc(var(--u)*1.4) calc(var(--u)*.75) 0;margin-right:calc(var(--u)*1.4);border-right:1px solid var(--line);font-size:calc(var(--u)*1.3);font-weight:700}
+.s-t i{width:calc(var(--u)*.9);height:calc(var(--u)*.9);display:inline-block;margin-right:calc(var(--u)*.6)}
+.s-t i.box{border:2px solid var(--none);width:calc(var(--u)*.8);height:calc(var(--u)*.8)}
+.s-t .num{font-size:calc(var(--u)*2.25);font-weight:700}
+.s-sum{flex:1.3;display:flex;align-items:center;justify-content:flex-end;font-size:calc(var(--u)*1.2);color:var(--muted)}
+.s-sum b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ═══════════════════════════ 設定（請修改這兩行） ═══════════════════════════ */
+const ORG = '國立雲林科技大學學生議會';   // 貴會名稱，例如「○○大學學生議會」，會顯示在每個畫面頂端
+const API_URL = 'https://script.google.com/macros/s/AKfycbxP8y_5f-aw4ZUVnWLn6GBEVusLuuZmkzfHfYBKkfpFk13GeynrkXW-eLGSWgnTI2fF/exec';   // Apps Script 部署網址
+const POLL_MS = { voter: 2000, admin: 2000, screen: 1500 };
+/* ════════════════════════════════════════════════════════════════════════════ */
+
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} }
+};
+const COLORS = { yes: 'var(--yes)', no: 'var(--no)', abs: 'var(--abs)', none: 'var(--none)', away: 'var(--away)' }; // 文字色
+const FILL = { yes: 'var(--yes)', no: 'var(--no)', abs: 'var(--abs-fill)' };                                         // 色塊
+const ON = { yes: '#fff', no: '#fff', abs: 'var(--ink)' };                                                             // 色塊上的文字
+const TONE = { pass: 'var(--yes)', fail: 'var(--no)', tie: 'var(--tie)' };
+const RULES = ['簡單多數決', '出席過半數', '出席三分之二', '全體過半數', '全體三分之二'];
+const labelsFor = kind => kind === '人事案' ? { yes: '同意', no: '不同意' } : { yes: '贊成', no: '反對', abs: '棄權' };
+const keysFor = kind => kind === '人事案' ? ['yes', 'no'] : ['yes', 'no', 'abs'];
+const CHECK = '<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><path d="M5 12l5 5 9-10"/></svg>';
+const CREDIT = '本系統由國立臺北大學三峽校區學生議會提供並協助架設';
+
+/* 伺服器時間校正，讓每台裝置倒數一致 */
+let offset = 0;
+const now = () => Date.now() + offset;
+const leftSec = endsAt => Math.max(0, Math.ceil((endsAt - now()) / 1000));
+const fmt = s => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+
+async function api(action, data = {}) {
+  const t0 = Date.now();
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(Object.assign({ action }, data))
+  });
+  const j = await res.json();
+  if (j.now) offset = j.now - Math.round((t0 + Date.now()) / 2);
+  return j;
+}
+
+function needTextFor(rule, kind, present, total) {
+  const L = labelsFor(kind);
+  let n = null;
+  if (rule === '出席過半數') n = Math.floor(present / 2) + 1;
+  if (rule === '出席三分之二') n = Math.ceil(present * 2 / 3);
+  if (rule === '全體過半數') n = Math.floor(total / 2) + 1;
+  if (rule === '全體三分之二') n = Math.ceil(total * 2 / 3);
+  return n === null ? `${L.yes}多於${L.no}即通過${kind === '人事案' ? '' : '（棄權不計）'}` : `${L.yes}須達 ${n} 票`;
+}
+
+/* ───── 路由與輪詢 ───── */
+let gen = 0, pollTimer = null;
+const tickers = new Set();
+setInterval(() => tickers.forEach(f => f()), 250);
+
+function poll(fn, ms) {
+  const g = gen;
+  const run = async () => {
+    if (g !== gen) return;
+    try { await fn(); } catch (e) { console.error(e); }
+    if (g === gen) pollTimer = setTimeout(run, ms);
+  };
+  run();
+}
+
+function route() {
+  gen++;
+  document.title = '議會表決系統｜' + ORG;
+  clearTimeout(pollTimer);
+  tickers.clear();
+  document.body.style.background = '';
+  if (API_URL.indexOf('請貼上') >= 0) {
+    $('#app').innerHTML = '<div class="card notice"><h2 class="card-title">尚未設定後端網址</h2><p class="muted">請在 index.html 開頭的 <code>API_URL</code> 貼上 Apps Script 網頁應用程式的部署網址。</p></div>';
+    return;
+  }
+  const h = location.hash.replace(/^#\/?/, '');
+  if (h === 'screen') Screen();
+  else if (h === 'admin') Admin();
+  else Voter();
+}
+window.addEventListener('hashchange', route);
+
+/* ═══════════ 議員手機 ═══════════ */
+function Voter() {
+  const token = store.get('vote_token');
+  if (!token) return VoterLogin();
+  const app = $('#app');
+  app.innerHTML = `
+    <div class="v-wrap">
+      <header class="topbar"><div class="v-bar">
+        <div><div class="sub">${ORG}</div><div class="ttl org">議會表決系統</div></div>
+        <button class="btn" id="logout">登出</button>
+      </div></header>
+      <div class="v-id"><span id="me">載入中…</span><span class="st" id="status">連線中…</span></div>
+      <main class="v-main" id="main"></main>
+      <p class="credit" style="padding:0 20px 14px">${CREDIT}</p>
+    </div>`;
+  $('#logout').onclick = async () => {
+    try { await api('logout', { token }); } catch (e) {}
+    store.set('vote_token', null);
+    route();
+  };
+
+  let data = null, viewKey = '', selected = null, sending = false, hintErr = '';
+  const main = $('#main');
+
+  function render() {
+    const v = data.vote;
+    $('#me').textContent = data.me.district ? `${data.me.name}　${data.me.district}` : data.me.name;
+    const st = $('#status');
+    st.className = 'st' + (data.present ? '' : ' wait');
+    st.textContent = data.present ? '已確認出席' : '待秘書處確認出席';
+
+    let mode = 'wait';
+    if (v && v.status === 'voting') mode = v.eligible ? 'ballot' : 'inelig';
+    else if (v && v.status === 'closed') mode = 'closed';
+    const key = mode + '|' + (v ? v.id : '');
+    if (key !== viewKey) {
+      viewKey = key; selected = null; sending = false; hintErr = '';
+      tickers.clear();
+      if (mode === 'wait') {
+        main.innerHTML = `<div class="v-empty"><h2 class="serif" style="font-size:20px">目前無進行中之表決</h2><p class="muted" style="line-height:1.7">秘書處宣布開始表決後，本頁將自動顯示表決選項。</p></div>`;
+      } else if (mode === 'inelig') {
+        main.innerHTML = `${head(v, false)}<div class="v-empty"><h2 class="serif" style="font-size:18px">表決開始時尚未確認出席</h2><p class="muted" style="line-height:1.7">本案無法參與表決，如有疑問請洽秘書處。</p></div>`;
+      } else if (mode === 'closed') {
+        main.innerHTML = `${head(v, false)}
+          <div class="strip"><div style="flex-direction:row;justify-content:space-between;align-items:center;padding:12px 0"><span class="muted">本人投票</span><span class="serif" id="mine" style="font-size:24px;font-weight:700"></span></div></div>
+          <p class="muted small">表決已截止。表決結果以投影畫面及主席宣告為準。</p>`;
+      } else {
+        const L = labelsFor(v.kind);
+        main.innerHTML = `${head(v, true)}
+          <div class="v-opts">${keysFor(v.kind).map(k => `<button class="v-opt" data-k="${k}" style="--c:${COLORS[k]};--f:${FILL[k]};--on:${ON[k]}" aria-pressed="false">${CHECK}${L[k]}</button>`).join('')}</div>
+          <button class="btn primary v-confirm" id="confirm" disabled>確認送出</button>
+          <p class="v-hint" id="hint" role="status"></p>
+          <div class="v-foot"><span class="num">${v.billId ? esc(v.billId) + '・' : ''}${esc(v.kind)}</span><span class="num" id="cnt"></span></div>`;
+        main.querySelectorAll('.v-opt').forEach(b => b.onclick = () => {
+          if (confirmed() || sending) return;
+          selected = b.dataset.k; hintErr = ''; update();
+        });
+        $('#confirm').onclick = submit;
+        let wasEnded = false;
+        const tick = () => {
+          const s = leftSec(data.vote.endsAt);
+          const el = $('#left');
+          if (!el) return;
+          el.textContent = fmt(s);
+          el.style.color = s <= 10 ? 'var(--no)' : '';
+          if ((s === 0) !== wasEnded) { wasEnded = s === 0; update(); }
+        };
+        tickers.add(tick); tick();
+      }
+    }
+    update();
+  }
+
+  function head(v, withTimer) {
+    return `<div style="display:flex;flex-direction:column;gap:4px"><span class="label">表決事項</span><h2 class="v-q serif">${esc(v.title)}</h2></div>
+      <div class="strip">
+        <div><span class="k">表決方式</span><span class="v">${v.named ? '記名表決' : '不記名表決'}</span></div>
+        <div><span class="k">可決門檻</span><span class="v">${esc(v.rule)}</span></div>
+        ${withTimer ? '<div style="align-items:flex-end"><span class="k">剩餘時間</span><span class="v num" id="left" style="font-size:22px;line-height:1.1">--:--</span></div>' : ''}
+      </div>`;
+  }
+
+  /* 已確認送出的選項（伺服器為準；不記名表決截止後改用本機紀錄顯示） */
+  function confirmed() {
+    const v = data.vote;
+    if (!v) return null;
+    return v.myChoice || store.get('vote_choice_' + v.id);
+  }
+
+  function update() {
+    const v = data.vote;
+    if (!v) return;
+    const L = labelsFor(v.kind);
+    const done = confirmed();
+    const shown = done || selected;
+    const ended = v.status !== 'voting' || leftSec(v.endsAt) === 0;
+    main.querySelectorAll('.v-opt').forEach(b => {
+      b.setAttribute('aria-pressed', String(b.dataset.k === shown));
+      b.disabled = !!done || sending || ended;
+    });
+    const cf = $('#confirm');
+    if (cf) {
+      cf.classList.toggle('hidden', !!done);
+      cf.disabled = !selected || sending || ended;
+      cf.textContent = sending ? '送出中…' : selected ? `確認送出「${L[selected]}」` : '確認送出';
+    }
+    const hint = $('#hint');
+    if (hint) {
+      hint.style.color = hintErr ? 'var(--no)' : '';
+      hint.textContent = hintErr
+        || (done ? `已送出「${L[done]}」。投票已完成，不得更改。`
+          : ended ? '表決時間已屆滿。'
+          : selected ? `已選擇「${L[selected]}」，請按「確認送出」。送出後不得更改。`
+          : '請選擇表決意向，再按「確認送出」。送出後不得更改。');
+    }
+    const cnt = $('#cnt');
+    if (cnt) cnt.textContent = `已投 ${v.voted}／出席 ${v.eligibleCount}`;
+    const mine = $('#mine');
+    if (mine) { mine.textContent = done ? L[done] : '未投票'; mine.style.color = done ? COLORS[done] : 'var(--muted)'; }
+  }
+
+  async function submit() {
+    const v = data.vote;
+    if (!selected || sending || confirmed()) return;
+    sending = true; hintErr = ''; update();
+    try {
+      const r = await api('vote', { token, choice: selected });
+      if (r.relogin) { store.set('vote_token', null); return route(); }
+      if (r.myChoice) { v.myChoice = r.myChoice; store.set('vote_choice_' + v.id, r.myChoice); }
+      if (!r.ok) hintErr = r.error;
+    } catch (e) { hintErr = '網路連線失敗，請再按一次「確認送出」'; }
+    sending = false; update();
+  }
+
+  poll(async () => {
+    const r = await api('me', { token });
+    if (r.relogin) { store.set('vote_token', null); return route(); }
+    if (!r.ok) { $('#status').textContent = r.error; return; }
+    data = r;
+    render();
+  }, POLL_MS.voter);
+}
+
+function loginPage(title, fields, button, note) {
+  return `
+    <div class="v-login">
+      <div class="hero"><span>${ORG}</span><h1 class="org">${title}</h1></div>
+      <form id="f">
+        ${fields}
+        <p class="err" id="err" role="alert"></p>
+        <button class="btn primary big" type="submit" id="go">${button}</button>
+      </form>
+      ${note ? `<p class="muted small note">${note}</p>` : ''}
+      <p class="credit" style="margin-top:auto;padding:0 24px 14px">${CREDIT}</p>
+    </div>`;
+}
+
+function VoterLogin() {
+  $('#app').innerHTML = loginPage('議會表決系統',
+    `<label class="field">帳號<input name="account" autocomplete="username" autocapitalize="none" required></label>
+     <label class="field">密碼<input name="password" type="password" autocomplete="current-password" required></label>`,
+    '登入', '帳號由議會秘書處核發，登入後請待秘書處確認出席。同一帳號於新裝置登入後，原裝置將自動登出。');
+  $('#f').onsubmit = async e => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    $('#go').disabled = true; $('#err').textContent = '';
+    try {
+      const r = await api('login', { account: String(fd.get('account')).trim(), password: String(fd.get('password')) });
+      if (r.ok) { store.set('vote_token', r.token); return route(); }
+      $('#err').textContent = r.error;
+    } catch (err) { $('#err').textContent = '網路連線失敗，請再試一次'; }
+    $('#go').disabled = false;
+  };
+}
+
+/* ═══════════ 秘書處控制台 ═══════════ */
+function Admin() {
+  const adminToken = store.get('vote_admin');
+  if (!adminToken) return AdminLogin();
+  const app = $('#app');
+  app.innerHTML = `
+    <header class="topbar"><div class="wrap a-bar">
+      <div class="row" style="gap:18px;align-items:baseline">
+        <span class="org" style="font-size:20px">${ORG}</span>
+        <span style="font-size:15px;color:var(--navy-sub)">議會表決系統　秘書處控制台　<span id="meeting"></span></span>
+      </div>
+      <div class="row">
+        <a class="btn light" href="#/screen" target="_blank" rel="noopener">開啟投影畫面</a>
+        <button class="btn" id="out">登出</button>
+      </div>
+    </div></header>
+    <div class="wrap a-grid">
+      <aside class="card a-side">
+        <div class="row between" style="padding-bottom:10px;border-bottom:1px solid var(--line)"><h2 class="card-title">出席簽到</h2><span class="num" style="font-size:24px;font-weight:700" id="pc"></span></div>
+        <p class="muted small">議員登入後，請確認其本人在場，再勾選「出席」。<b>僅勾選出席者可參與表決</b>；中途離席請取消勾選。表決開始後之異動，自下一案表決起生效。</p>
+        <div id="members" style="max-height:62vh;overflow-y:auto;padding-right:4px"></div>
+        <div class="row" style="padding-top:8px">
+          <button class="btn sm" id="reload">重新讀取名單</button>
+          <button class="btn sm" id="reset">清除全部簽到（新會議）</button>
+        </div>
+      </aside>
+      <main class="a-main">
+        <p class="err hidden" id="aerr" role="alert"></p>
+        <section id="current"></section>
+        <section class="card" style="display:flex;flex-direction:column;gap:14px">
+          <h2 class="card-title">表決紀錄</h2>
+          <div id="integ"></div>
+          <div class="table-box"><table>
+            <thead><tr><th>開始時間</th><th>議案</th><th>方式</th><th>門檻</th><th>出席</th><th>贊成／反對／棄權</th><th>未投</th><th>結果</th></tr></thead>
+            <tbody id="hist"></tbody>
+          </table></div>
+        </section>
+      </main>
+    </div>
+    <div class="wrap"><p class="credit" style="padding-bottom:20px;margin-top:-28px">${CREDIT}</p></div>`;
+
+  let data = null, mode = '', dismissed = store.get('vote_dismissed');
+  const form = { billId: '', title: '', kind: '一般議案', named: true, rule: '簡單多數決', seconds: 60 };
+  const cur = $('#current');
+
+  const showErr = msg => { const e = $('#aerr'); e.textContent = msg || ''; e.classList.toggle('hidden', !msg); };
+  async function act(action, extra = {}) {
+    showErr('');
+    try {
+      const r = await api(action, Object.assign({ adminToken }, extra));
+      if (r.relogin) { store.set('vote_admin', null); route(); return null; }
+      if (!r.ok) { showErr(r.error); return null; }
+      await refresh();
+      return r;
+    } catch (e) { showErr('網路連線失敗，請再試一次'); return null; }
+  }
+
+  $('#out').onclick = async () => { try { await api('adminLogout', { adminToken }); } catch (e) {} store.set('vote_admin', null); route(); };
+  $('#reload').onclick = () => act('reloadCouncil');
+  $('#reset').onclick = () => { if (confirm('確定清除所有議員的簽到與登入狀態？（適用於新的一次會議）')) act('resetAttendance'); };
+
+  function renderMembers() {
+    $('#meeting').textContent = data.meeting || '';
+    $('#pc').innerHTML = `${data.presentCount}<span style="font-size:15px;color:var(--muted)"> / ${data.total}</span>`;
+    $('#members').innerHTML = data.members.map(m => `
+      <label class="m-row">
+        <input type="checkbox" class="m-chk" data-acct="${esc(m.account)}" ${m.present ? 'checked' : ''} aria-label="${esc(m.name)} 出席">
+        <span class="m-name"><span><b>${esc(m.name)}</b>${m.district ? `　<span class="muted" style="font-size:13px">${esc(m.district)}</span>` : ''}</span>
+          <span class="m-st">${m.online ? (m.present ? '<b class="on">已登入</b>' : '<b class="wait">已登入，待確認出席</b>') : '未登入'}</span></span>
+        <span class="m-tag ${m.present ? 'on' : ''}">${m.present ? '出席' : '未出席'}</span>
+      </label>`).join('');
+    $('#members').querySelectorAll('.m-chk').forEach(c => c.onchange = () => {
+      c.disabled = true;
+      act('setPresence', { account: c.dataset.acct, present: c.checked });
+    });
+  }
+
+  function renderIntegrity() {
+    const r = data.integrity, el = $('#integ');
+    if (!r) { el.innerHTML = ''; return; }
+    const t = new Date(r.at).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+    const legacy = r.log.legacy + r.detail.legacy;
+    const btn = '<button class="btn sm" id="reverify" type="button">重新驗證</button>';
+    if (r.ok) {
+      el.innerHTML = `<div class="integ ok"><span>✓ 紀錄完整：表決紀錄、記名明細、操作紀錄的簽章全部相符（${t} 檢查）${legacy ? `<span class="muted">；另有 ${legacy} 筆啟用簽章前的舊紀錄無法驗證</span>` : ''}</span>${btn}</div>`;
+    } else {
+      const items = [];
+      [['log', '表決紀錄'], ['detail', '記名明細'], ['audit', '操作紀錄']].forEach(([k, n]) => {
+        if (r[k].bad.length) items.push(`「${n}」第 ${r[k].bad.join('、')} 列內容與簽章不符`);
+        if (r[k].tail) items.push(`「${n}」筆數或最後一筆與系統紀錄不符（可能有紀錄被刪除或插入）`);
+      });
+      el.innerHTML = `<div class="integ bad"><div><b>⚠ 偵測到紀錄可能遭人直接修改試算表（${t} 檢查）</b><ul>${items.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+        請到試算表「檔案 → 版本記錄 → 查看版本記錄」查看修改者與時間，並以操作紀錄核對。</div>${btn}</div>`;
+    }
+    $('#reverify').onclick = () => act('verify');
+  }
+
+  function renderHistory() {
+    $('#hist').innerHTML = data.history.length ? data.history.map(h => `
+      <tr><td class="num">${esc(h.start)}</td><td class="wide">${esc(h.billId)} ${esc(h.title)}</td><td>${esc(h.mode)} · ${esc(h.kind)}</td><td>${esc(h.rule)}</td>
+      <td class="num">${esc(h.present)}</td><td class="num">${esc(h.yes)} / ${esc(h.no)} / ${esc(h.abs)}</td><td class="num">${esc(h.notVoted)}</td><td style="font-weight:700">${esc(h.result)}</td></tr>`).join('')
+      : '<tr><td colspan="8" class="muted">尚無紀錄</td></tr>';
+  }
+
+  function renderCurrent() {
+    const v = data.vote;
+    let m = 'form';
+    if (v && v.status === 'voting') m = 'voting';
+    else if (v && v.status === 'closed' && dismissed !== v.id) m = 'closed';
+    const key = m + '|' + (v ? v.id : '');
+    if (key !== mode) {
+      mode = key;
+      tickers.clear();
+      if (m === 'form') buildForm();
+      else if (m === 'voting') buildVoting(v);
+      else buildClosed(v);
+    }
+    if (m === 'form') $('#need').textContent = `出席 ${data.presentCount} 人；${needTextFor(form.rule, form.kind, data.presentCount, data.total)}`;
+    if (m === 'voting') fillTallies(v);
+  }
+
+  function seg(name, opts) {
+    return `<div class="seg" data-seg="${name}">${opts.map(([val, label]) => `<button type="button" data-v="${esc(JSON.stringify(val))}" aria-pressed="${form[name] === val}">${label}</button>`).join('')}</div>`;
+  }
+
+  function buildForm() {
+    cur.innerHTML = `
+      <form class="card" id="sf" style="display:flex;flex-direction:column;gap:20px">
+        <h2 class="card-title ruled">建立表決</h2>
+        <div class="form-grid">
+          <label class="field">議案編號
+            <input name="billId" value="${esc(form.billId)}">
+            <span class="hint">選填，依貴會議案編號格式輸入</span>
+          </label>
+          <label class="field">表決事項
+            <input name="title" required maxlength="500" value="${esc(form.title)}">
+          </label>
+        </div>
+        <div class="row" style="gap:24px;align-items:flex-start">
+          <div class="field"><span>案別</span>${seg('kind', [['一般議案', '一般議案'], ['人事案', '人事案']])}</div>
+          <div class="field"><span>表決方式</span>${seg('named', [[true, '記名'], [false, '不記名']])}</div>
+          <label class="field">可決門檻（依主席宣告）
+            <select name="rule">${RULES.map(r => `<option ${r === form.rule ? 'selected' : ''}>${r}</option>`).join('')}</select>
+          </label>
+          <div class="field"><span>表決時限</span>${seg('seconds', [[30, '30 秒'], [60, '60 秒'], [90, '90 秒'], [120, '120 秒'], [180, '3 分']])}</div>
+        </div>
+        <div class="row between" style="padding-top:16px;border-top:1px solid var(--line)">
+          <span class="muted" id="need"></span>
+          <button class="btn primary big" type="submit" id="startBtn">開始表決</button>
+        </div>
+      </form>`;
+    const f = $('#sf');
+    f.billId.oninput = e => form.billId = e.target.value;
+    f.title.oninput = e => form.title = e.target.value;
+    f.rule.onchange = e => { form.rule = e.target.value; renderCurrent(); };
+    f.querySelectorAll('[data-seg]').forEach(group => group.querySelectorAll('button').forEach(b => b.onclick = () => {
+      form[group.dataset.seg] = JSON.parse(b.dataset.v);
+      group.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+      renderCurrent();
+    }));
+    f.onsubmit = async e => {
+      e.preventDefault();
+      $('#startBtn').disabled = true;
+      const r = await act('start', form);
+      if (r) { form.billId = ''; form.title = ''; }
+      else if ($('#startBtn')) $('#startBtn').disabled = false;
+    };
+  }
+
+  function chips(v) {
+    return `<span class="label">${v.status === 'voting' ? '表決進行中' : '表決結束'}　${esc(v.kind)}・${v.named ? '記名' : '不記名'}・${esc(v.rule)}</span>`;
+  }
+
+  function buildVoting(v) {
+    cur.innerHTML = `
+      <div class="card" style="display:flex;flex-direction:column;gap:20px">
+        <div class="row between" style="align-items:flex-start;gap:16px">
+          <div style="display:flex;flex-direction:column;gap:8px;min-width:0;flex:1">
+            ${chips(v)}
+            <h2 class="serif" style="font-size:22px;line-height:1.45;word-break:break-word">${esc(v.billId)}　${esc(v.title)}</h2>
+            <span class="muted small">${esc(v.needText)}</span>
+          </div>
+          <div style="text-align:right"><div class="muted small">剩餘時間</div><div class="num" id="aleft" style="font-size:44px;font-weight:700;line-height:1.1">--:--</div></div>
+        </div>
+        <div class="strip tallies" id="atal"></div>
+        <div class="row" style="justify-content:flex-end">
+          <button class="btn" id="ext">延長 30 秒</button>
+          <button class="btn danger" id="stop">立即截止</button>
+        </div>
+      </div>`;
+    $('#ext').onclick = () => act('extend', { seconds: 30 });
+    $('#stop').onclick = () => { if (confirm('確定立即截止本次表決？')) act('stop'); };
+    const tick = () => {
+      const el = $('#aleft');
+      if (!el || !data.vote) return;
+      const s = leftSec(data.vote.endsAt);
+      el.textContent = fmt(s);
+      el.style.color = s <= 10 ? 'var(--no)' : '';
+    };
+    tickers.add(tick); tick();
+  }
+
+  function fillTallies(v) {
+    const L = labelsFor(v.kind), t = v.tallies;
+    $('#atal').innerHTML = keysFor(v.kind).map(k => `
+      <div><span class="k"><i class="sw" style="background:${FILL[k]}"></i>${L[k]}</span><span class="v" style="color:${COLORS[k]}">${t[k]}</span></div>`).join('') +
+      `<div><span class="k">已投／出席</span><span class="v">${t.voted} / ${t.eligible}</span></div>`;
+  }
+
+  function summaryText(v) {
+    const L = labelsFor(v.kind), t = v.tallies;
+    let s = `${v.billId ? v.billId + ' ' : ''}${v.title}：${v.named ? '記名' : '不記名'}表決，出席 ${t.eligible} 人，${L.yes} ${t.yes} 票、${L.no} ${t.no} 票${v.kind === '人事案' ? '' : `、棄權 ${t.abs} 票`}，未投票 ${t.notVoted} 人；依${v.rule}，表決結果：${v.result.text}${v.result.tone === 'tie' ? '，由主席裁決' : ''}。`;
+    if (v.named && v.tiles) {
+      const g = {};
+      v.tiles.forEach(x => { if (x.s !== 'away') (g[x.s] = g[x.s] || []).push(x.name + (x.district ? `（${x.district}）` : '')); });
+      const lines = keysFor(v.kind).concat(['none']).filter(k => g[k]).map(k => `${k === 'none' ? '未投票' : L[k]}：${g[k].join('、')}`);
+      if (lines.length) s += '\n' + lines.join('\n');
+    }
+    return s;
+  }
+
+  function buildClosed(v) {
+    cur.innerHTML = `
+      <div class="card" style="display:flex;flex-direction:column;gap:18px">
+        <div class="row between" style="gap:16px">
+          <div style="display:flex;flex-direction:column;gap:6px;min-width:0;flex:1">
+            <span class="label">表決結束　${esc(v.billId)}　${esc(v.title)}</span>
+            <span class="serif" style="font-size:32px;font-weight:900;color:${TONE[v.result.tone]}">${esc(v.result.text)}</span>
+            <span class="muted">${esc(v.result.note)}</span>
+          </div>
+          <span class="stamp">已寫入 Google Sheet</span>
+        </div>
+        <div class="strip tallies" id="atal"></div>
+        <div class="row" style="justify-content:flex-end">
+          <button class="btn" id="copy">複製結果文字（會議紀錄用）</button>
+          <button class="btn primary" id="next">建立下一案表決</button>
+        </div>
+      </div>`;
+    fillTallies(v);
+    $('#copy').onclick = async () => {
+      const text = summaryText(v);
+      try { await navigator.clipboard.writeText(text); }
+      catch (e) {
+        const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta);
+        ta.select(); document.execCommand('copy'); ta.remove();
+      }
+      $('#copy').textContent = '已複製';
+    };
+    $('#next').onclick = () => { dismissed = v.id; store.set('vote_dismissed', v.id); renderCurrent(); };
+  }
+
+  async function refresh() {
+    const r = await api('admin', { adminToken });
+    if (r.relogin) { store.set('vote_admin', null); return route(); }
+    if (!r.ok) return showErr(r.error);
+    data = r;
+    renderMembers();
+    renderHistory();
+    renderIntegrity();
+    renderCurrent();
+  }
+
+  poll(refresh, POLL_MS.admin);
+}
+
+function AdminLogin() {
+  $('#app').innerHTML = loginPage('秘書處登入',
+    `<label class="field">秘書處密碼<input name="password" type="password" autocomplete="current-password" required></label>`,
+    '登入', '');
+  $('#f').onsubmit = async e => {
+    e.preventDefault();
+    $('#go').disabled = true; $('#err').textContent = '';
+    try {
+      const r = await api('adminLogin', { password: e.target.password.value });
+      if (r.ok) { store.set('vote_admin', r.adminToken); return route(); }
+      $('#err').textContent = r.error;
+    } catch (err) { $('#err').textContent = '網路連線失敗，請再試一次'; }
+    $('#go').disabled = false;
+  };
+}
+
+/* ═══════════ 投影大螢幕 ═══════════ */
+function Screen() {
+  document.body.style.background = '#fff';
+  $('#app').innerHTML = `
+    <div class="s-wrap" id="sw" title="按 F 或連點兩下切換全螢幕">
+      <div class="s-band"><div><span class="org">${ORG}</span><span class="mt" id="mt"></span></div><span class="st" id="st">連線中</span></div>
+      <div class="s-main">
+        <div class="s-subj"><span class="label" id="sl">表決事項</span><h1 class="s-title clamp2" id="title"></h1></div>
+        <div class="s-info" id="info"></div>
+        <div class="s-body" id="body"></div>
+        <div class="s-foot" id="foot"></div>
+      </div>
+      <span class="s-credit">${CREDIT}</span>
+    </div>`;
+  const toggleFs = () => { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {}); };
+  $('#sw').ondblclick = toggleFs;
+  document.onkeydown = e => { if (location.hash.indexOf('screen') >= 0 && (e.key === 'f' || e.key === 'F')) toggleFs(); };
+
+  let last = '', data = null;
+  const tick = () => {
+    const el = $('#sleft');
+    if (!el || !data || !data.vote) return;
+    const s = leftSec(data.vote.endsAt);
+    el.textContent = fmt(s);
+    el.style.color = s <= 10 ? 'var(--no)' : '';
+  };
+  tickers.add(tick);
+
+  /* 名牌自適應排版：量測名單區實際大小，在 2–12 欄中挑字最大的排法；
+     字級差距約 15% 以內時，優先選空格最少、名牌比例最協調者。視窗大小改變時自動重排。 */
+  function fit(n, hasD) {
+    const box = $('#body').getBoundingClientRect();
+    const W = Math.max(200, box.width - 2), H = Math.max(120, box.height - 2);
+    const u = Math.min(innerWidth, innerHeight * 1.778) / 100;
+    const cands = [];
+    for (let c = 2; c <= 12; c++) {
+      const r = Math.ceil(n / c), w = W / c, h = H / r;
+      // 名字最多約 4.5 字寬；有選區時多一行小字，名字可用高度較少
+      const nf = Math.min(2.8 * u, w / 5, h / (hasD ? 2.2 : 1.6));
+      cands.push({ c, nf, w, waste: c * r - n, shape: Math.abs(Math.log((w / h) / 2.2)) });
+    }
+    // 字級在最大值 85% 以內者，優先選空格最少、名牌比例（長寬約 2.2）最協調者
+    const maxNf = Math.max(...cands.map(x => x.nf));
+    const best = cands.filter(x => x.nf >= maxNf * 0.85)
+      .sort((a, b) => a.waste - b.waste || a.shape - b.shape || b.nf - a.nf)[0];
+    const df = Math.min(1.1 * u, Math.max(0.7 * u, best.nf * 0.42), best.w / 7.5);
+    return { cols: best.c, nf: Math.floor(best.nf), df: Math.floor(df) };
+  }
+
+  function tiles(list, colorOf) {
+    const L = fit(Math.max(1, list.length), list.some(t => t.district));
+    const cells = list.map(t => `<div class="s-tile">${t.district ? `<span class="d">${esc(t.district)}</span>` : ''}<span class="n" style="color:${colorOf(t)}">${esc(t.name)}</span></div>`);
+    while (cells.length % L.cols) cells.push('<div class="s-tile"></div>');
+    return `<div class="s-grid" style="grid-template-columns:repeat(${L.cols},minmax(0,1fr));--nfp:${L.nf}px;--dfp:${L.df}px">${cells.join('')}</div>`;
+  }
+
+  const cell = (k, v, x, cls) => `<div class="${cls || ''}"><span class="k">${k}</span>${v}${x ? `<span class="x">${x}</span>` : ''}</div>`;
+
+  function render() {
+    const v = data.vote;
+    $('#mt').textContent = data.meeting || '';
+    if (!v) {
+      $('#st').textContent = '等候表決';
+      $('#sl').textContent = '本次會議';
+      $('#title').textContent = '目前無進行中之表決';
+      $('#info').innerHTML = cell('出席人數', `<span class="v num">${data.presentCount}</span>`) + cell('全體議員', `<span class="v num">${data.total}</span>`) +
+        cell('說明', '<span class="v" style="font-weight:500">名單中深色為經確認出席之議員，淺灰為未出席</span>', '', '');
+      $('#foot').innerHTML = '';
+      $('#foot').style.display = 'none';
+      $('#body').innerHTML = tiles(data.members, m => m.present ? 'var(--none)' : 'var(--away)');
+      return;
+    }
+    $('#foot').style.display = '';
+    const L = labelsFor(v.kind), t = v.tallies;
+    $('#st').textContent = v.status === 'voting' ? '表決進行中' : '表決結束';
+    $('#sl').textContent = '表決事項';
+    $('#title').textContent = v.title;
+    $('#info').innerHTML =
+      cell('議案編號', `<span class="v num">${esc(v.billId || '—')}</span>`) +
+      cell('案別', `<span class="v">${esc(v.kind)}</span>`) +
+      cell('表決方式', `<span class="v">${v.named ? '記名表決' : '不記名表決'}</span>`) +
+      cell('可決門檻', `<span class="v">${esc(v.rule)}</span>`, esc(v.needText)) +
+      (v.status === 'voting'
+        ? cell('剩餘時間', '<span class="time num" id="sleft">--:--</span>', '', 'end')
+        : cell('表決結果', `<span class="res" style="color:${TONE[v.result.tone]}">${esc(v.result.text)}</span>`, esc(v.result.note), 'end'));
+    $('#foot').innerHTML =
+      keysFor(v.kind).map(k => `<div class="s-t"><span><i style="background:${FILL[k]}"></i>${L[k]}</span><span class="num" style="color:${COLORS[k]}">${t[k]}</span></div>`).join('') +
+      `<div class="s-t" style="color:var(--muted)"><span><i class="box"></i>未投票</span><span class="num" style="color:var(--ink)">${t.notVoted}</span></div>` +
+      `<div class="s-sum num">已投&nbsp;<b>${t.voted}</b>　出席&nbsp;<b>${t.eligible}</b>　全體&nbsp;${v.total}</div>`;
+    // 名牌最後才排，才能量到扣除其他區塊後的實際空間
+    $('#body').innerHTML = v.named
+      ? tiles(v.tiles, x => COLORS[x.s])
+      : `<div class="s-anon"><b>不記名表決</b><span>不公開個別議員投票，僅公布票數</span></div>`;
+    tick();
+  }
+
+  let rt = null;
+  window.onresize = () => { clearTimeout(rt); rt = setTimeout(() => { if (data && location.hash.indexOf('screen') >= 0) render(); }, 150); };
+
+  poll(async () => {
+    const r = await api('screen');
+    if (!r.ok) { $('#title').textContent = r.error; return; }
+    data = r;
+    const sig = JSON.stringify(r.vote) + JSON.stringify(r.members) + r.meeting;
+    if (sig !== last) { last = sig; render(); }
+  }, POLL_MS.screen);
+}
+
+route();
+</script>
+</body>
+</html>
